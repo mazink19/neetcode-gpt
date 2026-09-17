@@ -1,54 +1,32 @@
 import torch
-import torch.nn as nn
-import math
-from typing import List
+import torch.nn
+from torchtyping import TensorType
 
-
+# Round all answers to 4 decimal places: torch.round(tensor, decimals=4)
 class Solution:
-
-    def xavier_init(self, fan_in: int, fan_out: int) -> List[List[float]]:
-        # Return a (fan_out x fan_in) weight matrix using Xavier/Glorot normal initialization
-        # Use torch.manual_seed(0) for reproducibility
-        # Round to 4 decimal places and return as nested list
-        torch.manual_seed(0)
-        std = math.sqrt(2.0/(fan_in+ fan_out))
-        weights = torch.randn(fan_out, fan_in) * std
-        return torch.round(weights, decimals = 4).tolist()
+    def reshape(self, to_reshape: TensorType[float]) -> TensorType[float]:
+        # Reshape (M, N) tensor to (M*N/2, 2)
+        # Use torch.reshape(tensor, new_shape)
+        M, N = to_reshape.shape
+        reshaped = torch.reshape(to_reshape, ((M*N//2),2))
+        return torch.round(reshaped, decimals=4)
 
 
-    def kaiming_init(self, fan_in: int, fan_out: int) -> List[List[float]]:
-        # Return a (fan_out x fan_in) weight matrix using Kaiming/He normal initialization (for ReLU)
-        # Use torch.manual_seed(0) for reproducibility
-        # Round to 4 decimal places and return as nested list
-        torch.manual_seed(0)
-        std  = math.sqrt(2.0/fan_in)
-        weights = torch.randn(fan_out, fan_in) * std
-        return torch.round(weights, decimals = 4).tolist()
+    def average(self, to_avg: TensorType[float]) -> TensorType[float]:
+        # Compute column-wise mean (average across rows)
+        # Use torch.mean(tensor, dim=0)
+        average = torch.mean(to_avg, dim=0)
+        return torch.round(average, decimals=4)
 
-    def check_activations(self, num_layers: int, input_dim: int, hidden_dim: int, init_type: str) -> List[float]:
-        # Forward random input through num_layers with the given init_type.
-        # Use torch.manual_seed(0) once at the start.
-        # Return the std of activations after each layer, rounded to 2 decimals.
-        torch.manual_seed(0)
-        dims = [input_dim] + [hidden_dim] * num_layers
-        weights = []
-        for i in range(num_layers):
-            if init_type == "xavier":
-                std = math.sqrt(2.0/(dim[i] +dim[i+1]))
-            elif init_type =="kaiming":
-                std = math.sqrt(2.0/ dims[i])
-            else:
-                std = 1.0       
-            w = torch.randn(dims[i+1], dims[i]) * std
-            weights.append(w) 
+    def concatenate(self, cat_one: TensorType[float], cat_two: TensorType[float]) -> TensorType[float]:
+        # Join two tensors side-by-side along dim=1
+        # Use torch.cat((a, b), dim=1)
+        concatenated = torch.cat((cat_one, cat_two), dim =1) 
+        return torch.round(concatenated, decimals=4)
 
-        x = torch.randn(1, input_dim)
-        stds = []
-        for w in weights:
-            x = x @ w.T
-            x = torch.relu(x)
-            stds.append(round(x.std().item(), 2))
-        return stds
-
-
+        # Compute Mean Squared Error between prediction and target
+        # Use torch.nn.functional.mse_loss(prediction, target)
+    def get_loss(self, prediction: TensorType[float], target: TensorType[float]) -> TensorType[float]:
+        loss = torch.nn.functional.mse_loss(prediction, target)
+        return torch.round(loss, decimals=4)
 
